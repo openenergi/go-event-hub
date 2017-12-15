@@ -1,0 +1,43 @@
+---
+# Run this playbook with this command:
+# `ansible-playbook setup-amqp.yaml -vvvv --ask-sudo-pass`
+- name: Make sure Apache Qpid is built and configured
+  hosts: localhost
+  sudo: yes
+  tasks:
+  - set_fact: user_name=<PUT_YOUR_USERNAME_HERE>
+  - name: Update repositories cache 
+    apt:
+      update_cache: yes
+  - name: Install the dependencies needed to compile Apache QPID
+    apt: name={{item}} state=installed
+    with_items:
+      - gcc=4:6.3.0-4
+      - g++=4:6.3.0-4
+      - cmake=3.7.2-1
+      - cmake-curses-gui=3.7.2-1
+      - uuid-dev=2.29.2-1
+      - make=4.1-9.1
+  - name: Install SSL and Cyrus SASL requirements and Swig
+    apt: name={{item}} state=installed
+    with_items:
+      - libssl-dev=1.1.0f-3+deb9u1
+      - libsasl2-2=2.1.27~101-g0780600+dfsg-3
+      - libsasl2-dev=2.1.27~101-g0780600+dfsg-3
+      - libsasl2-modules=2.1.27~101-g0780600+dfsg-3
+      - swig=3.0.10-1.1
+  - name: Make sure src directory is there
+    file: path=/home/{{user_name}}/src state=directory owner={{user_name}}
+  - name: Clone Qpid 
+    git:
+      repo: 'http://git.apache.org/qpid-proton.git'
+      clone: yes
+      dest: /home/{{user_name}}/src/qpid-proton
+      version: tags/0.18.0
+  - name: Make sure the build directory for Qpid is there
+    file: path=/home/{{user_name}}/src/qpid-proton/build state=directory owner={{user_name}}
+  - name: Compile Qpid
+    command: bash -c 'cd /home/{{user_name}}/src/qpid-proton/build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DSYSINSTALL_BINDINGS=ON'
+  - name: Make install Qpid
+    command: bash -c 'cd /home/{{user_name}}/src/qpid-proton/build && make install'
+
