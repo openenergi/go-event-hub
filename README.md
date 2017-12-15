@@ -58,7 +58,7 @@ For the context and more details on how to tweak `Electron` in your `${GOPATH}` 
 
 To troubleshoot networking issues with Wireshark due to sockets, TSL connection, SSL keys, etc. you could use a filter like this: `ip.addr == 192.168.XXX.YYY && (tcp.srcport == 5671 || tcp.dstport == 5671)` where `5671` is the standard AMQP 1.0 TCP port to connect to the Azure Event Hub.
 
-Make sure the `Debug` option of the Go instance representing creating `electron.Connection` is set to `true` so the SSL key is stored to a file to be later used by Wireshark to decrypt the network traffic capture.
+Make sure the `Debug` option of the Go instance representing an AMQP connection (`eventhub.SenderOpts` and `eventhub.ReceiverOpts`) is set to `true` so the SSL key is stored to a file to be later used by Wireshark to decrypt the network traffic capture.
 Check `common.go` for more details on this.
 
 # Further readings
@@ -68,7 +68,7 @@ Check `common.go` for more details on this.
 - Microsoft details about the Event Hub protocol on top of AMQP 1.0: https://docs.microsoft.com/en-us/azure/service-bus-messaging/service-bus-amqp-protocol-guide
 - Go examples about sender/receiver via AMQP 1.0: https://github.com/apache/qpid-proton/tree/master/examples/go
 - On the Event Hub partitions: https://docs.microsoft.com/en-us/azure/event-hubs/event-hubs-features
-- Electron, a high level QPid Proton Go wrapper: https://godoc.org/qpid.apache.org/electron (also coming with the AMQP package: https://godoc.org/qpid.apache.org/amqp and the Proton package: https://godoc.org/qpid.apache.org/proton)
+- Electron, a high level Apache Qpid Proton Go wrapper: https://godoc.org/qpid.apache.org/electron (also coming with the AMQP package: https://godoc.org/qpid.apache.org/amqp and the Proton package: https://godoc.org/qpid.apache.org/proton)
 - Azure Event hub AMQP message properties and filters: http://azure.github.io/amqpnetlite/articles/azure_eventhubs.html
 
 ## TLS / Wireshark
