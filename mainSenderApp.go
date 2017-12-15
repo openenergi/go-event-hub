@@ -50,24 +50,24 @@ func main() {
 
 	// 1) send sync
 	// ------------
-	uniqueId, err := ehSender.Send(thisMessage)
+	uniqueID, err := ehSender.Send(thisMessage)
 	if err != nil {
 		appLogger.Printf("!!! error sending '%v', the error message is: %v\n", thisMessage, err)
 	}
-	appLogger.Printf("The message was identified by Send with this ID: %d\n", uniqueId)
+	appLogger.Printf("The message was identified by Send with this ID: %d\n", uniqueID)
 
 	// TODO change the sleep with a "quit channel"
 	time.Sleep(2 * time.Second)
 
 	// 2) send async (wait forever for ACK)
 	// ------------------------------------
-	uniqueId = ehSender.SendAsync(thisMessage)
-	appLogger.Printf("The message was identified by SendAsync with this ID: %d\n", uniqueId)
+	uniqueID = ehSender.SendAsync(thisMessage)
+	appLogger.Printf("The message was identified by SendAsync with this ID: %d\n", uniqueID)
 
 	// 3) send async with timeout
 	// --------------------------
-	uniqueId = ehSender.SendAsyncTimeout(thisMessage, 2*time.Second)
-	appLogger.Printf("The message was identified by SendAsyncTimeout with this ID: %d\n", uniqueId)
+	uniqueID = ehSender.SendAsyncTimeout(thisMessage, 2*time.Second)
+	appLogger.Printf("The message was identified by SendAsyncTimeout with this ID: %d\n", uniqueID)
 
 	select {}
 }
