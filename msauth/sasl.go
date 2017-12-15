@@ -1,4 +1,4 @@
-// The msauth package is used to generate a Microsoft SASL signed token
+// Package msauth package is used to generate a Microsoft SASL signed token
 // to be used across various services provided by Microsoft.
 package msauth
 
@@ -13,6 +13,7 @@ import (
 	"time"
 )
 
+// Signer helps in creating a valid Microsoft SASL signed token.
 type Signer interface {
 	Sign(uri string, expiry string) string
 }
