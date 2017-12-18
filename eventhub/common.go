@@ -4,7 +4,6 @@ package eventhub
 
 import (
 	"crypto/tls"
-	"errors"
 	"fmt"
 	"github.com/openenergi/go-event-hub/msauth"
 	"io/ioutil"
@@ -16,7 +15,7 @@ import (
 )
 
 const (
-	EventHubUriTemplate              = "amqp://%s.servicebus.windows.net/%s"
+	eventHubURITemplate              = "amqp://%s.servicebus.windows.net/%s"
 	EventHubDomainTemplate           = "%s.servicebus.windows.net"
 	EventHubDomainPortTemplate       = "%s.servicebus.windows.net:5671"
 	EventHubCbsName                  = "$cbs"
@@ -55,12 +54,12 @@ func tlsConfig(debug bool) (*tls.Config, error) {
 	return &tls.Config{}, nil
 }
 
-func msgProps(namespace string, name string, rawEventHubUri string) map[string]interface{} {
+func msgProps(namespace string, name string, rawEventHubURI string) map[string]interface{} {
 	// check https://github.com/Azure/amqpnetlite/blob/master/Examples/ServiceBus/Scenarios/CbsAsyncExample.cs
 	appProps := make(map[string]interface{})
 	appProps["operation"] = "put-token"
 	appProps["type"] = "servicebus.windows.net:sastoken"
-	appProps["name"] = rawEventHubUri
+	appProps["name"] = rawEventHubURI
 	return appProps
 }
 
@@ -92,7 +91,7 @@ func newAmqpConn(container electron.Container, namespace string, debug bool) (el
 
 // ---------------------------------------------------
 
-type HandshakeOpts struct {
+type handshakeOpts struct {
 	Namespace            string
 	Name                 string
 	SasPolicyName        string
@@ -104,7 +103,7 @@ type HandshakeOpts struct {
 
 type eventHubAuth struct {
 	signer               msauth.Signer
-	ehUri                string
+	ehURI                string
 	cbsHandshakeInterval time.Duration
 	currentToken         string
 	msgProps             map[string]interface{}
@@ -117,7 +116,7 @@ type eventHubAuth struct {
 func (eha *eventHubAuth) renewSasToken() {
 	expiryInterval := msauth.SignatureExpiry(time.Now(), eha.cbsHandshakeInterval)
 	Logger.Printf("The expiry interval for the SASL token is: %s\n", expiryInterval)
-	newToken := eha.signer.Sign(eha.ehUri, expiryInterval)
+	newToken := eha.signer.Sign(eha.ehURI, expiryInterval)
 	Logger.Printf("The new Microsoft SASL token is: %s\n", newToken)
 	eha.currentToken = newToken
 }
@@ -146,7 +145,7 @@ func validateOutcome(message electron.Outcome) error {
 		return message.Error
 	}
 	if message.Status != electron.Accepted {
-		return errors.New(fmt.Sprintf("The CBS handshake was unsuccessful, the AMQP package got this sending status: '%s'\n", message.Status))
+		return fmt.Errorf("The CBS handshake was unsuccessful, the AMQP package got this sending status: '%s'\n", message.Status)
 	}
 
 	return nil
@@ -180,23 +179,23 @@ func (eha *eventHubAuth) asyncScheduledHandshake() error {
 	return nil
 }
 
-func newEventHubAuth(ehOpts HandshakeOpts) (*eventHubAuth, error) {
+func newEventHubAuth(ehOpts handshakeOpts) (*eventHubAuth, error) {
 	if ehOpts.CbsHandshakeInterval < CbsHandshakeRecurrenceLowerBound {
-		return nil, errors.New(fmt.Sprintf("The CBS handshake interval must be at least: %s instead it was: %s \n", CbsHandshakeRecurrenceLowerBound, ehOpts.CbsHandshakeInterval))
+		return nil, fmt.Errorf("The CBS handshake interval must be at least: %s instead it was: %s \n", CbsHandshakeRecurrenceLowerBound, ehOpts.CbsHandshakeInterval)
 	}
 
 	// The URI follows this pattern: "amqp://<NAMESPACE>.servicebus.windows.net/<NAME>"
-	ehUri := fmt.Sprintf(EventHubUriTemplate, ehOpts.Namespace, ehOpts.Name)
-	Logger.Printf("Using this Event Hub URI: '%s'\n", ehUri)
+	ehURI := fmt.Sprintf(eventHubURITemplate, ehOpts.Namespace, ehOpts.Name)
+	Logger.Printf("Using this Event Hub URI: '%s'\n", ehURI)
 
 	// the CBS instance to return
 	instance := &eventHubAuth{
 		// the instance dealing with the Microsoft token
 		signer:               msauth.New(ehOpts.Namespace, ehOpts.SasPolicyName, ehOpts.SasPolicyKey),
 		cbsHandshakeInterval: ehOpts.CbsHandshakeInterval,
-		ehUri:                ehUri,
+		ehURI:                ehURI,
 		// the AMQP message properties shared among multiple link interactions
-		msgProps:  msgProps(ehOpts.Namespace, ehOpts.Name, ehUri),
+		msgProps:  msgProps(ehOpts.Namespace, ehOpts.Name, ehURI),
 		errorChan: ehOpts.ErrorChan,
 	}
 

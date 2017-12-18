@@ -23,7 +23,7 @@ func TestCbsLinkConstructor(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	cbsOpts := HandshakeOpts{
+	cbsOpts := handshakeOpts{
 		Namespace:            ehNamespace,
 		Name:                 ehName,
 		SasPolicyName:        superUserPolicy,

@@ -70,7 +70,7 @@ func NewReceiver(recOpts ReceiverOpts) (Receiver, error) {
 
 	errorChan := make(chan error)
 	// setup the CBS AMQP link and the handshake using the SASL token
-	cbsOpts := HandshakeOpts{
+	cbsOpts := handshakeOpts{
 		Namespace:            recOpts.EventHubNamespace,
 		Name:                 recOpts.EventHubName,
 		SasPolicyName:        recOpts.SasPolicyName,

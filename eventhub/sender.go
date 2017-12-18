@@ -88,7 +88,7 @@ func NewSender(sendOpts SenderOpts) (Sender, error) {
 
 	errorChan := make(chan error)
 	// setup the CBS AMQP link and the handshake using the SASL token
-	cbsOpts := HandshakeOpts{
+	cbsOpts := handshakeOpts{
 		Namespace:            sendOpts.EventHubNamespace,
 		Name:                 sendOpts.EventHubName,
 		SasPolicyName:        sendOpts.SasPolicyName,
