@@ -1,3 +1,5 @@
+// Package eventhub allows to connect to the Azure Event Hub via AMQP 1.0,
+// it then allows to send and receive messages.
 package eventhub
 
 import (

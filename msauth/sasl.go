@@ -1,4 +1,4 @@
-// Package msauth package is used to generate a Microsoft SASL signed token
+// Package msauth is used to generate a Microsoft SASL signed token
 // to be used across various services provided by Microsoft.
 package msauth
 
