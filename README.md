@@ -18,22 +18,39 @@ To install the Go wrapper (Electron) on a Linux Debian machine you can follow th
 
 # Sample sender / receiver
 
-Make sure you have configured the connection details of your Azure Event Hub inside the Go files, then compile the Go apps:
+## Connection details
+
+The Go files expect to find some environment variables. Make sure you have configured the connection details of your Azure Event Hub e.g.:
+
+```sh
+export EH_TEST_NAMESPACE=foo
+export EH_TEST_NAME=foo
+export EH_TEST_SAS_POLICY_NAME=foo
+export EH_TEST_SAS_POLICY_KEY=foo
+```
+
+## Compile
+
+To compile the Go apps:
 
 - for the sender: `go build -o sender mainSenderApp.go`
 - for the receiver: `go build -o receiver mainReceiverApp.go`
 
+## Run
+
 After the compilation you can run them:
 
-- the sender: `PN_TRACE_FRM=1 ./sender`
-- the receiver: `PN_TRACE_FRM=1 ./receiver`
+To run the sender: `PN_TRACE_FRM=1 ./sender`
+
+To run the receiver:
+- make sure the Consumer Group is set as an environment variable e.g. for the default Consumer Group of your Event Hub: `export EH_TEST_CONSUMER_GROUP="\$Default"`
+- then you can run the receiver app: `PN_TRACE_FRM=1 ./receiver`
 
 For more details on the Proton environment variables check: https://qpid.apache.org/releases/qpid-proton-0.18.0/proton/c/api/group__transport.html
 
 # Tests
 
-- Make sure the testing files are using the connection details
-  of your Azure Event Hub.
+- Make sure you set the Event Hub connection details as environment variables as previously explained.
 - Run all the tests: `go test -v ./msauth/... ./eventhub/...`.
 
 # Electron workaround
@@ -47,11 +64,12 @@ For the context and more details on how to tweak `Electron` in your `${GOPATH}` 
 
 ## Base Proton/Electron image
 
-- to build the base image: `docker build -t oe-mseventhub -f oe-mseventhub.Dockerfile .`
+- Make sure the connection details of the Event Hub are exported as environment variables (as explained before).
+- To build the base image (and **run the tests** within within the building process): `docker build -t oe-mseventhub --build-arg EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE --build-arg EH_TEST_NAME=$EH_TEST_NAME --build-arg EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME --build-arg EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -f oe-mseventhub.Dockerfile .`
 
 ## Example of a sender
 
-- build the image: `docker build -t eh-sender_i -f sender.Dockerfile .`;
+- build the image: `docker build -t eh-sender_i --build-arg EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE --build-arg EH_TEST_NAME=$EH_TEST_NAME --build-arg EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME --build-arg EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -f sender.Dockerfile .`;
 - run the image: `docker stop eh-sender_c ; docker rm eh-sender_c ; docker run -d --name eh-sender_c -it eh-sender_i`;
 - log into the container: `docker exec -it eh-sender_c bash`, 
   in there you can run the Go app like: `./sender` (or `PN_TRACE_FRM=1 ./sender`).

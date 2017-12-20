@@ -44,8 +44,18 @@ WORKDIR /go/src/qpid-proton/proton-c/bindings/go/src/qpid.apache.org/
 RUN git checkout 4edafb1a473e3a0d9aa3b9498a3f5bba257aba0a
 RUN cp -r /go/src/qpid-proton/proton-c/bindings/go/src/qpid.apache.org /go/src/
 
-# the source code of the internal dependency 
-# the HTTP call to random is to make sure this clone is not a cached operation
-WORKDIR /go/src/github.com/openenergi/
-ADD http://www.random.org/strings/?num=1&len=10&digits=on&unique=on&format=plain&rnd=new uuid
-RUN git clone https://github.com/openenergi/go-event-hub.git
+# load the source code of the project into the image
+WORKDIR /go/src/github.com/openenergi/go-event-hub
+ADD assets ./assets
+ADD eventhub ./eventhub
+ADD msauth ./msauth
+
+# make sure the required environment variables have been passed to the build command
+ARG EH_TEST_NAMESPACE
+ARG EH_TEST_NAME
+ARG EH_TEST_SAS_POLICY_NAME
+ARG EH_TEST_SAS_POLICY_KEY
+
+# run the tests
+WORKDIR /go/src/github.com/openenergi/go-event-hub
+RUN go test -v ./msauth/... ./eventhub/...

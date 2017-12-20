@@ -7,12 +7,13 @@ import (
 	"time"
 )
 
-const (
-	ehNamespace         = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
-	ehName              = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
-	superUserPolicy     = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
-	superUserPrimaryKey = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
-	consumerGroupName   = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
+var (
+	ehNamespace   = os.Getenv("EH_TEST_NAMESPACE")
+	ehName        = os.Getenv("EH_TEST_NAME")
+	sasPolicyName = os.Getenv("EH_TEST_SAS_POLICY_NAME")
+	sasPolicyKey  = os.Getenv("EH_TEST_SAS_POLICY_KEY")
+	// the consumer group is for the receiver app to consume messages
+	consumerGroupName = os.Getenv("EH_TEST_CONSUMER_GROUP")
 	// make sure the following CSV file contains the same
 	// number of Partitions specified on your Azure portal
 	offsetsRelPath       = "./assets/main_receiver_offsets.csv"
@@ -26,8 +27,8 @@ func main() {
 	ehReceiver, err := eventhub.NewReceiver(eventhub.ReceiverOpts{
 		EventHubNamespace: ehNamespace,
 		EventHubName:      ehName,
-		SasPolicyName:     superUserPolicy,
-		SasPolicyKey:      superUserPrimaryKey,
+		SasPolicyName:     sasPolicyName,
+		SasPolicyKey:      sasPolicyKey,
 		ConsumerGroupName: consumerGroupName,
 		// PartitionOffsets:     []string{"",""},//{"2440","1496"},
 		PartitionOffsetsPath: "./assets/main_receiver_offsets.csv",

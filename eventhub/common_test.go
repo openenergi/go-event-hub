@@ -8,11 +8,11 @@ import (
 	"time"
 )
 
-const (
-	ehNamespace         = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
-	ehName              = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
-	superUserPolicy     = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
-	superUserPrimaryKey = "<FILL_THIS_WITH_THE_RELEVANT_DETAILS>"
+var (
+	ehNamespace   = os.Getenv("EH_TEST_NAMESPACE")
+	ehName        = os.Getenv("EH_TEST_NAME")
+	sasPolicyName = os.Getenv("EH_TEST_SAS_POLICY_NAME")
+	sasPolicyKey  = os.Getenv("EH_TEST_SAS_POLICY_KEY")
 )
 
 func TestCbsLinkConstructor(t *testing.T) {
@@ -26,8 +26,8 @@ func TestCbsLinkConstructor(t *testing.T) {
 	cbsOpts := handshakeOpts{
 		Namespace:            ehNamespace,
 		Name:                 ehName,
-		SasPolicyName:        superUserPolicy,
-		SasPolicyKey:         superUserPrimaryKey,
+		SasPolicyName:        sasPolicyName,
+		SasPolicyKey:         sasPolicyKey,
 		CbsHandshakeInterval: 20 * time.Second,
 		AmqpConnection:       amqpConnection,
 	}
