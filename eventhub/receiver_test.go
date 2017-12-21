@@ -18,13 +18,13 @@ func TestConstructorForConsumerGroupsIsCheckingTheLengthOfThePartitionOffsetsArr
 }
 
 func TestTheNumberOfAmqpLinksIsTheSameAsThePartitionsOffsets(t *testing.T) {
-	fakeServer, fakeTcpConn := net.Pipe()
+	fakeServer, fakeTCPConn := net.Pipe()
 	go func() {
 		fakeServer.Close()
 	}()
-	defer fakeTcpConn.Close()
+	defer fakeTCPConn.Close()
 
-	fakeAmqpConn, _ := electron.NewConnection(fakeTcpConn)
+	fakeAmqpConn, _ := electron.NewConnection(fakeTCPConn)
 	defer fakeAmqpConn.Close(nil)
 
 	partitionOffsets := []string{"", ""}
@@ -49,15 +49,15 @@ func TestTheNumberOfAmqpLinksIsTheSameAsThePartitionsOffsets(t *testing.T) {
 func TestPartitionIDIsTheExpectedOne(t *testing.T) {
 	// made up input string
 	msg := RawMessage{Endpoint: "foo/bar/baz/2"}
-	partitionId := msg.ExtractPartitionID()
-	if partitionId != 2 {
+	partitionID := msg.ExtractPartitionID()
+	if partitionID != 2 {
 		t.Error(fmt.Sprintf("expected partition id to be 2 for input endpoint: '%s'", msg.Endpoint))
 	}
 
 	// real input string
 	msg = RawMessage{Endpoint: "amqp_receiver_40663@2(<-<EVENT_HUB_NAME>/ConsumerGroups/<CONSUMER_GROUP_NAME>/Partitions/1)"}
-	partitionId = msg.ExtractPartitionID()
-	if partitionId != 1 {
+	partitionID = msg.ExtractPartitionID()
+	if partitionID != 1 {
 		t.Error(fmt.Sprintf("expected partition id to be 1 for input endpoint: '%s'", msg.Endpoint))
 	}
 }

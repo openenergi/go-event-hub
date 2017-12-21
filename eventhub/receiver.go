@@ -193,22 +193,22 @@ var (
 )
 
 // ToEhMessage transforms a RawMessage to a EhMessage
-func (msg RawMessage) ToEhMessage() EhMessage {
+func (rawMsg RawMessage) ToEhMessage() EhMessage {
 	output := EhMessage{}
-	output.EhEndpoint = msg.Endpoint
-	output.PartitionID = msg.ExtractPartitionID()
+	output.EhEndpoint = rawMsg.Endpoint
+	output.PartitionID = rawMsg.ExtractPartitionID()
 	// allowing both message bodies of type 'string' and '[]byte'
 	// TODO check if the AMQP standard allows messages with bodies of different type
 	// in the same AMQP link/connection
-	switch msg.AmqpMsg.Body().(type) {
+	switch rawMsg.AmqpMsg.Body().(type) {
 	case amqp.Binary:
-		output.Body = string([]byte(msg.AmqpMsg.Body().(amqp.Binary)))
+		output.Body = string([]byte(rawMsg.AmqpMsg.Body().(amqp.Binary)))
 	case string:
-		output.Body = msg.AmqpMsg.Body().(string)
+		output.Body = rawMsg.AmqpMsg.Body().(string)
 	default:
-		panic(fmt.Sprintf("Unexpected type for the AMQP message, this Event Hub library allows to send messages only as 'string' or '[]byte', now the received message has type: '%v'", reflect.TypeOf(msg.AmqpMsg.Body()).Kind()))
+		panic(fmt.Sprintf("Unexpected type for the AMQP message, this Event Hub library allows to send messages only as 'string' or '[]byte', now the received message has type: '%v'", reflect.TypeOf(rawMsg.AmqpMsg.Body()).Kind()))
 	}
-	annotationsMap := msg.AmqpMsg.MessageAnnotations()
+	annotationsMap := rawMsg.AmqpMsg.MessageAnnotations()
 	output.SequenceNumber = annotationsMap[amqpEhOptSequenceNumberKey].(int64)
 	output.Offset = annotationsMap[amqpEhOptOffsetKey].(string)
 	output.EnqueuedTime = annotationsMap[amqpEhOptEnqueuedTimeKey].(time.Time)
