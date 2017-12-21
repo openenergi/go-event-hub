@@ -13,10 +13,15 @@ import (
 	"time"
 )
 
+// Receiver allows to consume messages from the Azure Event Hub
 type Receiver interface {
+	// Close allows to close the AMQP connection to the Event Hub
 	Close()
+	// AsyncFetch triggers the infinite loop to fetch messages from the Azure Event Hub
 	AsyncFetch()
+	// ReceiveChan is a channel allowing to consume the messages coming from the Event Hub via AMQP 1.0
 	ReceiveChan() chan EhMessage
+	// ErrorChan is a channel allowing to to consume all the errors coming from the AMQP connection
 	ErrorChan() chan error
 }
 
@@ -30,6 +35,7 @@ type receiver struct {
 	errorChan      chan error
 }
 
+// ReceiverOpts allows to configure the receiver when creating the instance
 type ReceiverOpts struct {
 	EventHubNamespace    string
 	EventHubName         string
@@ -51,7 +57,7 @@ func asyncPipeChannelsAndUpdateInMemoryOffsets(cgBackendChan chan EhMessage, lib
 	go func(currOm offsetManager, cgBackendChan chan EhMessage, libraryFrontendChan chan EhMessage) {
 		for currEhMsg := range cgBackendChan {
 			Logger.Printf("The received msg (to update the in-memory offsets): %v\n", currEhMsg)
-			currOm.UpdateOffset(currEhMsg.Offset, currEhMsg.PartitionId)
+			currOm.UpdateOffset(currEhMsg.Offset, currEhMsg.PartitionID)
 			libraryFrontendChan <- currEhMsg
 		}
 	}(om, cgBackendChan, libraryFrontendChan)
@@ -176,7 +182,7 @@ type EhMessage struct {
 	Offset         string    `json:"offset"`
 	EnqueuedTime   time.Time `json:"enqueued_time"`
 	EhEndpoint     string    `json:"eh_endpoint"`
-	PartitionId    int       `json:"partition_id"`
+	PartitionID    int       `json:"partition_id"`
 }
 
 var (
@@ -190,7 +196,7 @@ var (
 func (msg RawMessage) ToEhMessage() EhMessage {
 	output := EhMessage{}
 	output.EhEndpoint = msg.Endpoint
-	output.PartitionId = msg.ExtractPartitionId()
+	output.PartitionID = msg.ExtractPartitionID()
 	// allowing both message bodies of type 'string' and '[]byte'
 	// TODO check if the AMQP standard allows messages with bodies of different type
 	// in the same AMQP link/connection
@@ -214,11 +220,11 @@ func (msg RawMessage) ToEhMessage() EhMessage {
 	return output
 }
 
-// ExtractPartitionId gets the partition number from the RawMessage
+// ExtractPartitionID gets the partition number from the RawMessage
 // finding it from the Endpoint field
-func (msg RawMessage) ExtractPartitionId() int {
+func (rawMsg RawMessage) ExtractPartitionID() int {
 	// "amqp_receiver_40663@2(<-<EVENT_HUB_NAME>/ConsumerGroups/<CONSUMER_GROUP_NAME>/Partitions/<PARTITION_ID>)"
-	arr := strings.Split(msg.Endpoint, "/")
+	arr := strings.Split(rawMsg.Endpoint, "/")
 	// "1)" -> "1"
 	numStr := strings.Split(arr[len(arr)-1], ")")[0]
 	// 1

@@ -46,17 +46,17 @@ func TestTheNumberOfAmqpLinksIsTheSameAsThePartitionsOffsets(t *testing.T) {
 	}
 }
 
-func TestPartitionIdIsTheExpectedOne(t *testing.T) {
+func TestPartitionIDIsTheExpectedOne(t *testing.T) {
 	// made up input string
 	msg := RawMessage{Endpoint: "foo/bar/baz/2"}
-	partitionId := msg.ExtractPartitionId()
+	partitionId := msg.ExtractPartitionID()
 	if partitionId != 2 {
 		t.Error(fmt.Sprintf("expected partition id to be 2 for input endpoint: '%s'", msg.Endpoint))
 	}
 
 	// real input string
 	msg = RawMessage{Endpoint: "amqp_receiver_40663@2(<-<EVENT_HUB_NAME>/ConsumerGroups/<CONSUMER_GROUP_NAME>/Partitions/1)"}
-	partitionId = msg.ExtractPartitionId()
+	partitionId = msg.ExtractPartitionID()
 	if partitionId != 1 {
 		t.Error(fmt.Sprintf("expected partition id to be 1 for input endpoint: '%s'", msg.Endpoint))
 	}
