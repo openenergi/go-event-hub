@@ -117,11 +117,11 @@ func TestOffsetManagerUpdate(t *testing.T) {
 		t.Error(err)
 	}
 	newOffset := "foo"
-	partitionId := 1
-	om.UpdateOffset(newOffset, partitionId)
+	partitionID := 1
+	om.UpdateOffset(newOffset, partitionID)
 	updatedPartitonOffsets := om.Current()
 
-	if updatedPartitonOffsets[partitionId] != newOffset {
+	if updatedPartitonOffsets[partitionID] != newOffset {
 		t.Error(fmt.Sprintf("The expected values for the partitions are different than the found ones: '%v'", updatedPartitonOffsets))
 	}
 }
@@ -135,8 +135,8 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 	checkFlushedOffsetsInterval := 2 * flushInterval
 	// the offsets to be updated at each "update call" (12/2=6 times in total)
 	offsets := []string{"foo", "bar", "baz", "xxx", "yyy", "zzz"}
-	partitionIdToUpdate := 0
-	partitionIdNoUpdate := 1
+	partitionIDToUpdate := 0
+	partitionIDNoUpdate := 1
 	partitionOffsetsPath := "../assets/test_offsets_lifecycle.csv"
 
 	om, err := newOffsetManager(offsetsOpts{PartitionOffsetsPath: partitionOffsetsPath})
@@ -145,15 +145,15 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 	}
 
 	// async update map every 2 seconds
-	go func(currOm OffsetManager, interval time.Duration) {
+	go func(currOm *offsetManager, interval time.Duration) {
 		tickerUpdateOffsets := time.NewTicker(interval)
 		currIndex := 0
 		for {
 			select {
 			case <-tickerUpdateOffsets.C:
 				fmt.Printf("The ticker ticked! The currIndex is: %d\n", currIndex)
-				currOm.UpdateOffset(offsets[currIndex], partitionIdToUpdate)
-				currIndex += 1
+				currOm.UpdateOffset(offsets[currIndex], partitionIDToUpdate)
+				currIndex++
 			}
 			if currIndex == len(offsets) {
 				break
@@ -168,7 +168,7 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 	om.asyncStoreOffsets(flushInterval)
 
 	// async assert every update of the in-memory map
-	go func(currOm OffsetManager, interval time.Duration, t *testing.T) {
+	go func(currOm *offsetManager, interval time.Duration, t *testing.T) {
 		tickerCheckOffsets := time.NewTicker(interval)
 		currIdx := 0
 		for {
@@ -176,14 +176,14 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 			case <-tickerCheckOffsets.C:
 				currOffsets := currOm.Current()
 				expectedOffset := offsets[currIdx]
-				hasUnaffectedPartitionChangedOffset := currOffsets[partitionIdNoUpdate] != ""
-				hasAffectedPartitionUnexpectedOffset := currOffsets[partitionIdToUpdate] != expectedOffset
+				hasUnaffectedPartitionChangedOffset := currOffsets[partitionIDNoUpdate] != ""
+				hasAffectedPartitionUnexpectedOffset := currOffsets[partitionIDToUpdate] != expectedOffset
 				fmt.Printf("Integration test: checking current index %d (and expected offset %s) and current offsets %v. hasUnaffectedPartitionChangedOffset? %v hasAffectedPartitionUnexpectedOffset? %v \n", currIdx, expectedOffset, currOffsets, hasUnaffectedPartitionChangedOffset, hasAffectedPartitionUnexpectedOffset)
 				if hasUnaffectedPartitionChangedOffset ||
 					hasAffectedPartitionUnexpectedOffset {
 					panic(fmt.Sprintf("Something weird with the in-memory values: '%v' hasUnaffectedPartitionChangedOffset? %v hasAffectedPartitionUnexpectedOffset? %v \n", currOffsets, hasUnaffectedPartitionChangedOffset, hasAffectedPartitionUnexpectedOffset))
 				}
-				currIdx += 1
+				currIdx++
 			}
 			if currIdx == len(offsets) {
 				break
@@ -199,7 +199,7 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 	if err != nil {
 		t.Error(err)
 	}
-	if foundOffsets[partitionIdToUpdate] != offsets[5] {
+	if foundOffsets[partitionIDToUpdate] != offsets[5] {
 		t.Error(fmt.Sprintf("Async flushing issues, the CSV file was: '%v', it's not containing: '%s'", foundOffsets, offsets[5]))
 	}
 	if foundOffsets[1] != "" {

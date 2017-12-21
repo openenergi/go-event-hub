@@ -11,14 +11,17 @@ import (
 
 const (
 	defaultRelPath          = "../assets/partition_offsets.csv"
-	RecurringTimeLowerBound = 100 * time.Millisecond
+	recurringTimeLowerBound = 100 * time.Millisecond
 )
 
-type OffsetManager interface {
-	Current() []string
-	UpdateOffset(newValue string, partitionID int)
-}
-
+// offsetManager is the struct containing the logic to get/set
+// the parition values of the in-memory slice.
+// It could be potentially exported as the following interface.
+//
+// type OffsetManager interface {
+// 	Current() []string
+// 	UpdateOffset(newValue string, partitionID int)
+// }
 type offsetManager struct {
 	// in-memory offsets slice
 	mu             sync.Mutex
@@ -103,8 +106,8 @@ func (om *offsetManager) concurrentStoreOffsets() {
 // A recurring interval no less than 500ms *MUST* be provided,
 // otherwise there are too many I/O operations to store the partitions in the CSV file.
 func (om *offsetManager) asyncStoreOffsets(recurringTime time.Duration) error {
-	if recurringTime < RecurringTimeLowerBound {
-		return fmt.Errorf("A recurring interval of less than %s is not valid, please provide a valid recurring interval", RecurringTimeLowerBound)
+	if recurringTime < recurringTimeLowerBound {
+		return fmt.Errorf("A recurring interval of less than %s is not valid, please provide a valid recurring interval", recurringTimeLowerBound)
 	}
 
 	om.tickerFlushOffsets = time.NewTicker(recurringTime)
