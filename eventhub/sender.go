@@ -9,11 +9,17 @@ import (
 	"time"
 )
 
+// Sender allows to send messages to the Azure Event Hub.
 type Sender interface {
+	// Close can be used to close the AMQP 1.0 connection to the Event Hub
 	Close()
+	// Send synchronously sends a message returning either an error or the ACK value
 	Send(message string) (int32, error)
+	// SendAsync returns straight away
 	SendAsync(message string) int32
+	// SendAsyncTimeout is asynchronous but it uses a timeout
 	SendAsyncTimeout(message string, timeout time.Duration) int32
+	// ErrorChan is a channel allowing to to consume all the errors coming from the AMQP connection
 	ErrorChan() chan error
 }
 
@@ -34,9 +40,10 @@ type sender struct {
 	msgLink        electron.Sender
 	errorChan      chan error
 	outcomeChan    chan electron.Outcome
-	msgCounterId   atomicCounter
+	msgCounterID   atomicCounter
 }
 
+// SenderOpts allows to configure the sender when creating the instance
 type SenderOpts struct {
 	EventHubNamespace   string
 	EventHubName        string
@@ -139,12 +146,13 @@ func (s *sender) prepareAmqpMsg(message string) (amqp.Message, int32) {
 	m := amqp.NewMessage()
 	m.SetInferred(true)
 	m.Marshal([]byte(message))
-	curValue := s.msgCounterId.plusOne()
+	curValue := s.msgCounterID.plusOne()
 	Logger.Printf("Sending this message: '%s' with id %d \n", message, curValue)
 	return m, curValue
 }
 
-// Send allows the user to send a message in a synchronous way
+// Send allows the user to send a message in a synchronous way.
+// It returns the number of sent messages so far along with an error instance.
 func (s *sender) Send(message string) (int32, error) {
 	msg, curValue := s.prepareAmqpMsg(message)
 	outcome := s.msgLink.SendSync(msg)
