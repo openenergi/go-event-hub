@@ -260,28 +260,28 @@ type consumerGroupOpts struct {
 	linkCapacity      int
 }
 
-func amqpMsgFilter(cgOpts consumerGroupOpts, partitionId int) map[amqp.Symbol]interface{} {
+func amqpMsgFilter(cgOpts consumerGroupOpts, partitionID int) map[amqp.Symbol]interface{} {
 	filterMap := make(map[amqp.Symbol]interface{})
-	partitionOffset := cgOpts.partitionOffsets[partitionId]
+	partitionOffset := cgOpts.partitionOffsets[partitionID]
 	if partitionOffset != "" {
 		offsetDesc := amqp.Described{
 			Descriptor: amqp.Symbol("apache.org:selector-filter:string"),
 			Value:      fmt.Sprintf("amqp.annotation.x-opt-offset > '%v'", partitionOffset),
 		}
 		filterMap[amqp.Symbol("string")] = offsetDesc
-		Logger.Printf("The filter map for partitionId %d is: %v\n", partitionId, filterMap)
+		Logger.Printf("The filter map for partitionID %d is: %v\n", partitionID, filterMap)
 		return filterMap
 	}
-	Logger.Printf("No offset for partitionId %d, returning nil\n", partitionId)
+	Logger.Printf("No offset for partitionID %d, returning nil\n", partitionID)
 	return nil
 }
 
 const defaultLinkCapacity = 50
 
 // This returns an electron.Receiver instance
-func amqpLink(cgOpts consumerGroupOpts, filterMap map[amqp.Symbol]interface{}, partitionId int) (electron.Receiver, error) {
+func amqpLink(cgOpts consumerGroupOpts, filterMap map[amqp.Symbol]interface{}, partitionID int) (electron.Receiver, error) {
 	// build the consumer group path
-	cgPath := fmt.Sprintf("%s/ConsumerGroups/%s/Partitions/%d", cgOpts.eventHubName, cgOpts.consumerGroupName, partitionId)
+	cgPath := fmt.Sprintf("%s/ConsumerGroups/%s/Partitions/%d", cgOpts.eventHubName, cgOpts.consumerGroupName, partitionID)
 	// validate the link capacity parameter
 	if cgOpts.linkCapacity == 0 {
 		cgOpts.linkCapacity = defaultLinkCapacity
