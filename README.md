@@ -19,6 +19,9 @@ To install the Go wrapper (Electron) on a Linux Debian machine you can follow th
 
 # Sample sender / receiver
 
+There are a pair of Go files containing a `main` function to demonstrate the usage of the library.
+They could be use to send and receive messages via the Event Hub.
+
 ## Connection details
 
 The Go files expect to find some environment variables. Make sure you have configured the connection details of your Azure Event Hub e.g.:
@@ -66,13 +69,13 @@ For the context and more details on how to tweak `Electron` in your `${GOPATH}` 
 ## Base Proton/Electron image
 
 - Make sure the connection details of the Event Hub are exported as environment variables (as explained before).
-- To build the base image (and **run the tests** within within the building process): `docker build -t oe-mseventhub --build-arg EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE --build-arg EH_TEST_NAME=$EH_TEST_NAME --build-arg EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME --build-arg EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -f oe-mseventhub.Dockerfile .`
+- To build the base image (and **run the tests** within within the building process): `docker build -t oe-mseventhub --build-arg EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE --build-arg EH_TEST_NAME=$EH_TEST_NAME --build-arg EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME --build-arg EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -f oe-mseventhub.Dockerfile .`.
 
 ## Example of a sender
 
-- build the image: `docker build -t eh-sender_i --build-arg EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE --build-arg EH_TEST_NAME=$EH_TEST_NAME --build-arg EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME --build-arg EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -f sender.Dockerfile .`;
-- run the image: `docker stop eh-sender_c ; docker rm eh-sender_c ; docker run -d --name eh-sender_c -it eh-sender_i`;
-- log into the container: `docker exec -it eh-sender_c bash`, 
+- Build the docker image: `docker build -t eh-sender_i --build-arg EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE --build-arg EH_TEST_NAME=$EH_TEST_NAME --build-arg EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME --build-arg EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -f sender.Dockerfile .`.
+- Then run the docker container: `docker stop eh-sender_c ; docker rm eh-sender_c ; docker run -d --name eh-sender_c -it eh-sender_i`.
+- You could then log into the container: `docker exec -it eh-sender_c bash`, 
   in there you can run the Go app like: `./sender` (or `PN_TRACE_FRM=1 ./sender`).
 
 # Networking
