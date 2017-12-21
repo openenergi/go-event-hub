@@ -211,7 +211,7 @@ func newEventHubAuth(ehOpts handshakeOpts) (*eventHubAuth, error) {
 
 // -------------------------------------------------
 
-// A Logger can be used simultaneously from multiple go routines;
+// Logger can be used simultaneously from multiple go routines;
 // it guarantees to serialize access to the Writer.
 // cf. https://golang.org/pkg/log/#Logger
 var Logger StdLogger = log.New(ioutil.Discard, "[Event Hub]", log.LstdFlags)

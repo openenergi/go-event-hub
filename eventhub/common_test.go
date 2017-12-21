@@ -56,7 +56,7 @@ func TestLengthWhenReadingSlice(t *testing.T) {
 	}
 
 	if firstNum != secondNum {
-		t.Error(fmt.Sprintf("This is not a predictable zero random generator! The first number is: %d the second number is: %d", firstNum, secondNum))
+		t.Errorf("This is not a predictable zero random generator! The first number is: %d the second number is: %d", firstNum, secondNum)
 	}
 }
 

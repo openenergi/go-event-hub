@@ -1,7 +1,6 @@
 package eventhub
 
 import (
-	"fmt"
 	"net"
 	"qpid.apache.org/electron"
 	"testing"
@@ -51,13 +50,13 @@ func TestPartitionIDIsTheExpectedOne(t *testing.T) {
 	msg := RawMessage{Endpoint: "foo/bar/baz/2"}
 	partitionID := msg.ExtractPartitionID()
 	if partitionID != 2 {
-		t.Error(fmt.Sprintf("expected partition id to be 2 for input endpoint: '%s'", msg.Endpoint))
+		t.Errorf("expected partition id to be 2 for input endpoint: '%s'", msg.Endpoint)
 	}
 
 	// real input string
 	msg = RawMessage{Endpoint: "amqp_receiver_40663@2(<-<EVENT_HUB_NAME>/ConsumerGroups/<CONSUMER_GROUP_NAME>/Partitions/1)"}
 	partitionID = msg.ExtractPartitionID()
 	if partitionID != 1 {
-		t.Error(fmt.Sprintf("expected partition id to be 1 for input endpoint: '%s'", msg.Endpoint))
+		t.Errorf("expected partition id to be 1 for input endpoint: '%s'", msg.Endpoint)
 	}
 }
