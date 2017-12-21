@@ -10,13 +10,13 @@ import (
 )
 
 const (
-	DefaultRelPath          = "../assets/partition_offsets.csv"
+	defaultRelPath          = "../assets/partition_offsets.csv"
 	RecurringTimeLowerBound = 100 * time.Millisecond
 )
 
 type OffsetManager interface {
 	Current() []string
-	UpdateOffset(newValue string, partitionId int)
+	UpdateOffset(newValue string, partitionID int)
 }
 
 type offsetManager struct {
@@ -28,7 +28,7 @@ type offsetManager struct {
 	tickerFlushOffsets *time.Ticker
 }
 
-type OffsetsOpts struct {
+type offsetsOpts struct {
 	// the size of the slice *MUST* be the same as the number of partitions
 	PartitionOffsets []string
 	// the CSV file *MUST* contain as many columns as the number of partitions
@@ -38,7 +38,7 @@ type OffsetsOpts struct {
 // Remember to provide either a slice or a CSV where the number of columns
 // *MUST* match the number of partitions setup in the properties of the Event Hub
 // on the Azure Portal
-func NewOffsetManager(pOpts OffsetsOpts) (*offsetManager, error) {
+func newOffsetManager(pOpts offsetsOpts) (*offsetManager, error) {
 	instance := &offsetManager{}
 
 	// if the offsets are in the input options
@@ -48,8 +48,8 @@ func NewOffsetManager(pOpts OffsetsOpts) (*offsetManager, error) {
 	if len(pOpts.PartitionOffsets) > 0 {
 		instance.currentOffsets = pOpts.PartitionOffsets
 		if pOpts.PartitionOffsetsPath == "" {
-			Logger.Printf("Using the default path for the CSV partition offsets: %s\n", DefaultRelPath)
-			instance.offsetsRelPath = DefaultRelPath
+			Logger.Printf("Using the default path for the CSV partition offsets: %s\n", defaultRelPath)
+			instance.offsetsRelPath = defaultRelPath
 		} else {
 			instance.offsetsRelPath = pOpts.PartitionOffsetsPath
 		}
@@ -86,10 +86,10 @@ func (om *offsetManager) Current() []string {
 }
 
 // UpdateOffset could be used to update the value for a given partition ID
-func (om *offsetManager) UpdateOffset(newValue string, partitionId int) {
+func (om *offsetManager) UpdateOffset(newValue string, partitionID int) {
 	om.mu.Lock()
-	om.currentOffsets[partitionId] = newValue
-	Logger.Printf("Done updating the current partition offsets '%v' with the new value '%s' with partitionId '%d'\n", om.currentOffsets, newValue, partitionId)
+	om.currentOffsets[partitionID] = newValue
+	Logger.Printf("Done updating the current partition offsets '%v' with the new value '%s' with partitionID '%d'\n", om.currentOffsets, newValue, partitionID)
 	om.mu.Unlock()
 	// TODO should this return the old value?
 }
@@ -104,7 +104,7 @@ func (om *offsetManager) concurrentStoreOffsets() {
 // otherwise there are too many I/O operations to store the partitions in the CSV file.
 func (om *offsetManager) asyncStoreOffsets(recurringTime time.Duration) error {
 	if recurringTime < RecurringTimeLowerBound {
-		return errors.New(fmt.Sprintf("A recurring interval of less than %s is not valid, please provide a valid recurring interval", RecurringTimeLowerBound))
+		return fmt.Errorf("A recurring interval of less than %s is not valid, please provide a valid recurring interval", RecurringTimeLowerBound)
 	}
 
 	om.tickerFlushOffsets = time.NewTicker(recurringTime)

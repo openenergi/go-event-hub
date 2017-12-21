@@ -16,11 +16,11 @@ import (
 
 const (
 	eventHubURITemplate              = "amqp://%s.servicebus.windows.net/%s"
-	EventHubDomainTemplate           = "%s.servicebus.windows.net"
-	EventHubDomainPortTemplate       = "%s.servicebus.windows.net:5671"
-	EventHubCbsName                  = "$cbs"
-	CbsHandshakeRecurrenceLowerBound = 20 * time.Second
-	SslKeyLogsRelPath                = "./sslkey.log"
+	eventHubDomainTemplate           = "%s.servicebus.windows.net"
+	eventHubDomainPortTemplate       = "%s.servicebus.windows.net:5671"
+	eventHubCbsName                  = "$cbs"
+	cbsHandshakeRecurrenceLowerBound = 20 * time.Second
+	sslKeyLogsRelPath                = "./sslkey.log"
 )
 
 type debugRand struct{}
@@ -40,7 +40,7 @@ func newZeroRand() *debugRand {
 func tlsConfig(debug bool) (*tls.Config, error) {
 	if debug == true {
 		// https://golang.org/pkg/crypto/tls/#example_Config_keyLogWriter
-		w, err := os.OpenFile(SslKeyLogsRelPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
+		w, err := os.OpenFile(sslKeyLogsRelPath, os.O_WRONLY|os.O_CREATE|os.O_TRUNC, 0644)
 		if err != nil {
 			return nil, err
 		}
@@ -48,7 +48,7 @@ func tlsConfig(debug bool) (*tls.Config, error) {
 			Rand:         newZeroRand(),
 			KeyLogWriter: w,
 		}
-		Logger.Printf("The TLS configuration is storing the SSL key at '%s'\n", SslKeyLogsRelPath)
+		Logger.Printf("The TLS configuration is storing the SSL key at '%s'\n", sslKeyLogsRelPath)
 		return &tlsConfig, nil
 	}
 	return &tls.Config{}, nil
@@ -69,13 +69,13 @@ func newAmqpConn(container electron.Container, namespace string, debug bool) (el
 	if err != nil {
 		return nil, err
 	}
-	ehDomainPort := fmt.Sprintf(EventHubDomainPortTemplate, namespace)
+	ehDomainPort := fmt.Sprintf(eventHubDomainPortTemplate, namespace)
 	tlsConn, err := tls.Dial("tcp", ehDomainPort, tlsConfig)
 	if err != nil {
 		return nil, err
 	}
 	// AMQP over TCP
-	ehDomain := fmt.Sprintf(EventHubDomainTemplate, namespace)
+	ehDomain := fmt.Sprintf(eventHubDomainTemplate, namespace)
 	amqpConn, err := container.Connection(
 		tlsConn,
 		electron.VirtualHost(ehDomain),
@@ -180,8 +180,8 @@ func (eha *eventHubAuth) asyncScheduledHandshake() error {
 }
 
 func newEventHubAuth(ehOpts handshakeOpts) (*eventHubAuth, error) {
-	if ehOpts.CbsHandshakeInterval < CbsHandshakeRecurrenceLowerBound {
-		return nil, fmt.Errorf("The CBS handshake interval must be at least: %s instead it was: %s \n", CbsHandshakeRecurrenceLowerBound, ehOpts.CbsHandshakeInterval)
+	if ehOpts.CbsHandshakeInterval < cbsHandshakeRecurrenceLowerBound {
+		return nil, fmt.Errorf("The CBS handshake interval must be at least: %s instead it was: %s \n", cbsHandshakeRecurrenceLowerBound, ehOpts.CbsHandshakeInterval)
 	}
 
 	// The URI follows this pattern: "amqp://<NAMESPACE>.servicebus.windows.net/<NAME>"
@@ -200,7 +200,7 @@ func newEventHubAuth(ehOpts handshakeOpts) (*eventHubAuth, error) {
 	}
 
 	// AMQP link on the "$cbs" special EvenHub dedicated to the SASL handshake
-	cbsAmqpLink, err := ehOpts.AmqpConnection.Sender(electron.Target(EventHubCbsName))
+	cbsAmqpLink, err := ehOpts.AmqpConnection.Sender(electron.Target(eventHubCbsName))
 	if err != nil {
 		return nil, err
 	}

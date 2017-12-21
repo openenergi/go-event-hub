@@ -93,7 +93,7 @@ func NewReceiver(recOpts ReceiverOpts) (Receiver, error) {
 	// Channel where the AMQP messages from the Event Hub will be published
 	msgOutChan := make(chan EhMessage)
 	// CSV file storage for the partition offsets
-	offsetManager, err := NewOffsetManager(OffsetsOpts{PartitionOffsets: recOpts.PartitionOffsets, PartitionOffsetsPath: recOpts.PartitionOffsetsPath})
+	offsetManager, err := newOffsetManager(offsetsOpts{PartitionOffsets: recOpts.PartitionOffsets, PartitionOffsetsPath: recOpts.PartitionOffsetsPath})
 	if err != nil {
 		return nil, err
 	}

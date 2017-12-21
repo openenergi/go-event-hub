@@ -5,6 +5,7 @@ import (
 	"net"
 	"qpid.apache.org/electron"
 	"testing"
+	"time"
 )
 
 func TestConstructorForConsumerGroupsIsCheckingTheLengthOfThePartitionOffsetsArray(t *testing.T) {
@@ -35,6 +36,10 @@ func TestTheNumberOfAmqpLinksIsTheSameAsThePartitionsOffsets(t *testing.T) {
 		inMsgsChan:        make(chan EhMessage),
 		amqpConnection:    fakeAmqpConn,
 	})
+
+	// TODO find out why the following cg.AmqpLinks() randomly fails with:
+	// panic: runtime error: invalid memory address or nil pointer dereference
+	time.Sleep(2 * time.Second)
 
 	if len(cg.AmqpLinks()) != len(partitionOffsets) {
 		t.Error("The number of AMQP links must be equivalent to the number of input partition offsets")

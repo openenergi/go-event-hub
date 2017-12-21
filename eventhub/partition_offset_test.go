@@ -8,7 +8,7 @@ import (
 )
 
 func TestCsvLoadForValidCsvFile(t *testing.T) {
-	offsets, err := loadOffsets(DefaultRelPath)
+	offsets, err := loadOffsets(defaultRelPath)
 	if err != nil {
 		t.Error(err)
 	}
@@ -75,7 +75,7 @@ func TestCsvWriteThenReadNumbersAsStrings(t *testing.T) {
 
 func TestOffsetManagerDefaultValueForPartitonOffsetsWhenPassingThemAsASlice(t *testing.T) {
 	defaultOffsets := []string{"", "", ""}
-	om, err := NewOffsetManager(OffsetsOpts{PartitionOffsets: defaultOffsets})
+	om, err := newOffsetManager(offsetsOpts{PartitionOffsets: defaultOffsets})
 	if err != nil {
 		t.Error(err)
 	}
@@ -94,7 +94,7 @@ func TestOffsetManagerDefaultValueForPartitonOffsetsWhenPassingThemAsASlice(t *t
 }
 
 func TestOffsetManagerDefaultValueForPartitonOffsetsWhenPassingThemAsAPath(t *testing.T) {
-	om, err := NewOffsetManager(OffsetsOpts{PartitionOffsetsPath: DefaultRelPath})
+	om, err := newOffsetManager(offsetsOpts{PartitionOffsetsPath: defaultRelPath})
 	if err != nil {
 		t.Error(err)
 	}
@@ -102,17 +102,17 @@ func TestOffsetManagerDefaultValueForPartitonOffsetsWhenPassingThemAsAPath(t *te
 	currentPartitonOffsets := om.Current()
 
 	if len(currentPartitonOffsets) != 2 {
-		t.Error(fmt.Sprintf("The expected length of partitions (2) at path '%s' is different: '%d'", DefaultRelPath, len(currentPartitonOffsets)))
+		t.Error(fmt.Sprintf("The expected length of partitions (2) at path '%s' is different: '%d'", defaultRelPath, len(currentPartitonOffsets)))
 	}
 
 	if currentPartitonOffsets[0] != "" ||
 		currentPartitonOffsets[1] != "" {
-		t.Error(fmt.Sprintf("The expected values for the partitions at path '%v' are different than the found ones: '%v'", DefaultRelPath, currentPartitonOffsets))
+		t.Error(fmt.Sprintf("The expected values for the partitions at path '%v' are different than the found ones: '%v'", defaultRelPath, currentPartitonOffsets))
 	}
 }
 
 func TestOffsetManagerUpdate(t *testing.T) {
-	om, err := NewOffsetManager(OffsetsOpts{PartitionOffsetsPath: DefaultRelPath})
+	om, err := newOffsetManager(offsetsOpts{PartitionOffsetsPath: defaultRelPath})
 	if err != nil {
 		t.Error(err)
 	}
@@ -139,7 +139,7 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 	partitionIdNoUpdate := 1
 	partitionOffsetsPath := "../assets/test_offsets_lifecycle.csv"
 
-	om, err := NewOffsetManager(OffsetsOpts{PartitionOffsetsPath: partitionOffsetsPath})
+	om, err := newOffsetManager(offsetsOpts{PartitionOffsetsPath: partitionOffsetsPath})
 	if err != nil {
 		t.Error(err)
 	}
@@ -209,7 +209,7 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 }
 
 func TestAsyncShouldValidateTheTimeInterval(t *testing.T) {
-	om, err := NewOffsetManager(OffsetsOpts{PartitionOffsetsPath: DefaultRelPath})
+	om, err := newOffsetManager(offsetsOpts{PartitionOffsetsPath: defaultRelPath})
 	if err != nil {
 		t.Error(err)
 	}
