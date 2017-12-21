@@ -4,6 +4,7 @@ This is an Azure Event Hub AMQP 1.0 connector for the Go programming language (G
 
 [![GoDoc](https://godoc.org/github.com/openenergi/go-event-hub?status.svg)](https://godoc.org/github.com/openenergi/go-event-hub)
 [![Build Status](https://travis-ci.org/openenergi/go-event-hub.svg?branch=feature%2Ftravis-ci)](https://travis-ci.org/openenergi/go-event-hub)
+[![Go Report Card](https://goreportcard.com/badge/github.com/openenergi/go-event-hub)](https://goreportcard.com/report/github.com/openenergi/go-event-hub)
 
 # Installation and setup
 
