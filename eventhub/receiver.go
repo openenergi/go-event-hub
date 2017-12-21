@@ -53,8 +53,8 @@ type ReceiverOpts struct {
 // Every time a new incoming message is processed
 // the in-memory slice with the partition offsets
 // is updated
-func asyncPipeChannelsAndUpdateInMemoryOffsets(cgBackendChan chan EhMessage, libraryFrontendChan chan EhMessage, om offsetManager) {
-	go func(currOm offsetManager, cgBackendChan chan EhMessage, libraryFrontendChan chan EhMessage) {
+func asyncPipeChannelsAndUpdateInMemoryOffsets(cgBackendChan chan EhMessage, libraryFrontendChan chan EhMessage, om *offsetManager) {
+	go func(currOm *offsetManager, cgBackendChan chan EhMessage, libraryFrontendChan chan EhMessage) {
 		for currEhMsg := range cgBackendChan {
 			Logger.Printf("The received msg (to update the in-memory offsets): %v\n", currEhMsg)
 			currOm.UpdateOffset(currEhMsg.Offset, currEhMsg.PartitionID)
@@ -124,7 +124,7 @@ func NewReceiver(recOpts ReceiverOpts) (Receiver, error) {
 	// Second: asynchronously pipe the received messages "EhMessage" between
 	// 2 equivalent "backend channel" and "frontend channel" in order
 	// to be able to update the Partition (offsets to be stored in a CSV file)
-	asyncPipeChannelsAndUpdateInMemoryOffsets(cgOutChan, msgOutChan, *offsetManager)
+	asyncPipeChannelsAndUpdateInMemoryOffsets(cgOutChan, msgOutChan, offsetManager)
 
 	Logger.Printf("Returning the receiver instance\n")
 	return &receiver{

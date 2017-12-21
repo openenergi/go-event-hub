@@ -112,14 +112,14 @@ func (om *offsetManager) asyncStoreOffsets(recurringTime time.Duration) error {
 
 	om.tickerFlushOffsets = time.NewTicker(recurringTime)
 	Logger.Printf("Just setup the async calls to flush the partition offests to file every interval in seconds: %s\n", recurringTime)
-	go func(currOm offsetManager) {
+	go func(currOm *offsetManager) {
 		for {
 			select {
 			case <-currOm.tickerFlushOffsets.C:
 				currOm.concurrentStoreOffsets()
 			}
 		}
-	}(*om)
+	}(om)
 	return nil
 }
 
