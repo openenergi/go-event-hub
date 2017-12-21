@@ -13,7 +13,7 @@ func TestCsvLoadForValidCsvFile(t *testing.T) {
 		t.Error(err)
 	}
 	if len(offsets) != 2 {
-		t.Error(fmt.Sprintf("The input CSV file is supposed to have 1 row with 2 fields, but it has instead %d fields!", len(offsets)))
+		t.Errorf("The input CSV file is supposed to have 1 row with 2 fields, but it has instead %d fields!", len(offsets))
 	}
 }
 
@@ -43,7 +43,7 @@ func TestCsvWriteThenRead(t *testing.T) {
 		(len(expectedOffsets) != 2) ||
 		(foundOffsets[0] != expectedOffsets[0]) ||
 		(foundOffsets[1] != expectedOffsets[1]) {
-		t.Error(fmt.Sprintf("Found the offsets '%v' but expected to find '%v'", foundOffsets, expectedOffsets))
+		t.Errorf("Found the offsets '%v' but expected to find '%v'", foundOffsets, expectedOffsets)
 	}
 
 	os.Remove(relPath)
@@ -67,7 +67,7 @@ func TestCsvWriteThenReadNumbersAsStrings(t *testing.T) {
 		(len(expectedOffsets) != 2) ||
 		(foundOffsets[0] != expectedOffsets[0]) ||
 		(foundOffsets[1] != expectedOffsets[1]) {
-		t.Error(fmt.Sprintf("Found the offsets '%v' but expected to find '%v'", foundOffsets, expectedOffsets))
+		t.Errorf("Found the offsets '%v' but expected to find '%v'", foundOffsets, expectedOffsets)
 	}
 
 	os.Remove(relPath)
@@ -83,13 +83,13 @@ func TestOffsetManagerDefaultValueForPartitonOffsetsWhenPassingThemAsASlice(t *t
 	currentPartitonOffsets := om.Current()
 
 	if len(defaultOffsets) != len(currentPartitonOffsets) {
-		t.Error(fmt.Sprintf("The expected length of partitions '%d' is different: '%d'", len(defaultOffsets), len(currentPartitonOffsets)))
+		t.Errorf("The expected length of partitions '%d' is different: '%d'", len(defaultOffsets), len(currentPartitonOffsets))
 	}
 
 	if defaultOffsets[0] != currentPartitonOffsets[0] ||
 		defaultOffsets[1] != currentPartitonOffsets[1] ||
 		defaultOffsets[2] != currentPartitonOffsets[2] {
-		t.Error(fmt.Sprintf("The expected values for the partitions '%v' are different than the found ones: '%v'", defaultOffsets, currentPartitonOffsets))
+		t.Errorf("The expected values for the partitions '%v' are different than the found ones: '%v'", defaultOffsets, currentPartitonOffsets)
 	}
 }
 
@@ -102,12 +102,12 @@ func TestOffsetManagerDefaultValueForPartitonOffsetsWhenPassingThemAsAPath(t *te
 	currentPartitonOffsets := om.Current()
 
 	if len(currentPartitonOffsets) != 2 {
-		t.Error(fmt.Sprintf("The expected length of partitions (2) at path '%s' is different: '%d'", defaultRelPath, len(currentPartitonOffsets)))
+		t.Errorf("The expected length of partitions (2) at path '%s' is different: '%d'", defaultRelPath, len(currentPartitonOffsets))
 	}
 
 	if currentPartitonOffsets[0] != "" ||
 		currentPartitonOffsets[1] != "" {
-		t.Error(fmt.Sprintf("The expected values for the partitions at path '%v' are different than the found ones: '%v'", defaultRelPath, currentPartitonOffsets))
+		t.Errorf("The expected values for the partitions at path '%v' are different than the found ones: '%v'", defaultRelPath, currentPartitonOffsets)
 	}
 }
 
@@ -122,7 +122,7 @@ func TestOffsetManagerUpdate(t *testing.T) {
 	updatedPartitonOffsets := om.Current()
 
 	if updatedPartitonOffsets[partitionID] != newOffset {
-		t.Error(fmt.Sprintf("The expected values for the partitions are different than the found ones: '%v'", updatedPartitonOffsets))
+		t.Errorf("The expected values for the partitions are different than the found ones: '%v'", updatedPartitonOffsets)
 	}
 }
 
@@ -200,10 +200,10 @@ func TestAsyncFlushOfTheOffsets(t *testing.T) {
 		t.Error(err)
 	}
 	if foundOffsets[partitionIDToUpdate] != offsets[5] {
-		t.Error(fmt.Sprintf("Async flushing issues, the CSV file was: '%v', it's not containing: '%s'", foundOffsets, offsets[5]))
+		t.Errorf("Async flushing issues, the CSV file was: '%v', it's not containing: '%s'", foundOffsets, offsets[5])
 	}
 	if foundOffsets[1] != "" {
-		t.Error(fmt.Sprintf("Async flushing issues, the CSV file was: '%v', it's not containing empty values for the not-updated fields", foundOffsets))
+		t.Errorf("Async flushing issues, the CSV file was: '%v', it's not containing empty values for the not-updated fields", foundOffsets)
 	}
 
 }
@@ -217,6 +217,6 @@ func TestAsyncShouldValidateTheTimeInterval(t *testing.T) {
 	intervalLessThan100ms := 99 * time.Millisecond
 	err = om.asyncStoreOffsets(intervalLessThan100ms)
 	if err == nil {
-		t.Error(fmt.Sprintf("An error is expected for intervals less than 100ms, the interval was: %s\n", intervalLessThan100ms))
+		t.Errorf("An error is expected for intervals less than 100ms, the interval was: %s\n", intervalLessThan100ms)
 	}
 }
