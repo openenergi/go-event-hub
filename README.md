@@ -15,8 +15,8 @@ To install the Go wrapper (Electron) on a Linux Debian machine you can follow th
 ## Requirements
 
 - Go 1.8
-- Apache Qpid Proton 0.18.0
-- Go Electron 0.18.1 (more on this further down this document)
+- Apache Qpid Proton 0.19.0
+- Go Electron 0.19.0
 
 # Sample sender / receiver
 
@@ -41,13 +41,14 @@ To compile the Go apps:
 - for the sender: `go build -o sender mainSenderApp.go`
 - for the receiver: `go build -o receiver mainReceiverApp.go`
 
-## Run
-
-After the compilation you can run them:
+## Run the sender
 
 To run the sender: `PN_TRACE_FRM=1 ./sender`
 
+## Run the receiver
+
 To run the receiver:
+
 - make sure the Consumer Group is set as an environment variable e.g. for the default Consumer Group of your Event Hub: `export EH_TEST_CONSUMER_GROUP="\$Default"`
 - then you can run the receiver app: `PN_TRACE_FRM=1 ./receiver`
 
@@ -58,13 +59,6 @@ For more details on the Proton environment variables check: https://qpid.apache.
 - Make sure you set the Event Hub connection details as environment variables as previously explained.
 - Run all the tests: `go test -v ./msauth/... ./eventhub/...`.
 
-# Electron workaround
-
-The `Electron` library needs to be fetched using `git` instead of `go get`
-due to a timestamp issue and bug fix to be released on Proton versions after the current 0.18.1, the git commit ID is: `4edafb1a473e3a0d9aa3b9498a3f5bba257aba0a`.
-
-For the context and more details on how to tweak `Electron` in your `${GOPATH}` check the procedure defined in this docker file: `oe-mseventhub.Dockerfile`.  
-
 # Docker
 
 ## Base Proton/Electron image
@@ -74,8 +68,9 @@ For the context and more details on how to tweak `Electron` in your `${GOPATH}` 
 
 ## Example of a sender
 
-- Build the docker image: `docker build -t eh-sender_i --build-arg EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE --build-arg EH_TEST_NAME=$EH_TEST_NAME --build-arg EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME --build-arg EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -f sender.Dockerfile .`.
-- Then run the docker container: `docker stop eh-sender_c ; docker rm eh-sender_c ; docker run -d --name eh-sender_c -it eh-sender_i`.
+- Build the docker image: `docker build -t eh-sender_i -f sender.Dockerfile .`.
+- Make sure the connection details of the Event Hub are exported as environment variables (as explained before).
+- Then run the docker container: `docker stop eh-sender_c ; docker rm eh-sender_c ; docker run -d --name eh-sender_c -e EH_TEST_NAMESPACE=$EH_TEST_NAMESPACE -e EH_TEST_NAME=$EH_TEST_NAME -e EH_TEST_SAS_POLICY_NAME=$EH_TEST_SAS_POLICY_NAME -e EH_TEST_SAS_POLICY_KEY=$EH_TEST_SAS_POLICY_KEY -it eh-sender_i`.
 - You could then log into the container: `docker exec -it eh-sender_c bash`, 
   in there you can run the Go app like: `./sender` (or `PN_TRACE_FRM=1 ./sender`).
 

@@ -1,11 +1,11 @@
 ---
 # Run this playbook with this command:
-# `ansible-playbook setup-amqp.yaml -vvvv --ask-sudo-pass`
+# `ansible-playbook setup-amqp.yaml -vvvv --ask-sudo-pass --extra-vars "target_user=<PUT_YOUR_USERNAME_HERE>"`
 - name: Make sure Apache Qpid is built and configured
   hosts: localhost
   sudo: yes
   tasks:
-  - set_fact: user_name=<PUT_YOUR_USERNAME_HERE>
+  - set_fact: user_name="{{ target_user }}"
   - name: Update repositories cache 
     apt:
       update_cache: yes
@@ -33,11 +33,13 @@
       repo: 'http://git.apache.org/qpid-proton.git'
       clone: yes
       dest: /home/{{user_name}}/src/qpid-proton
-      version: tags/0.18.0
+      version: tags/0.19.0
   - name: Make sure the build directory for Qpid is there
     file: path=/home/{{user_name}}/src/qpid-proton/build state=directory owner={{user_name}}
-  - name: Compile Qpid
+  - name: Configure Qpid using cmake
     command: bash -c 'cd /home/{{user_name}}/src/qpid-proton/build && cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DSYSINSTALL_BINDINGS=ON'
   - name: Make install Qpid
     command: bash -c 'cd /home/{{user_name}}/src/qpid-proton/build && make install'
 
+  # TODO follow the same approach in the Dockerfile to fetch the Go Electron package
+  # copying it from the Qpid Proton project, making sure that's checked out at the expected commit ID / git tag

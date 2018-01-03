@@ -26,22 +26,15 @@ RUN apt-get install -y swig=3.0.10-1.1
 
 # compile Apache QPID proton-c
 WORKDIR /go/src/qpid-proton
-RUN git checkout tags/0.18.0
+RUN git fetch
+RUN git checkout tags/0.19.0
 WORKDIR /go/src/qpid-proton/build
 RUN cmake .. -DCMAKE_INSTALL_PREFIX=/usr -DSYSINSTALL_BINDINGS=ON
 RUN make install
 
 # Apache QPID Go dependencies
 # RUN go get qpid.apache.org/electron
-
-# make sure the Go Electron dependency has the expected commit ID
-# this is needed because of an issue with timestamps and Azure Event Hub
-#
-# for more details cf.:
-# https://issues.apache.org/jira/browse/PROTON-1717
-# https://github.com/apache/qpid-proton/commit/4edafb1a473e3a0d9aa3b9498a3f5bba257aba0a
 WORKDIR /go/src/qpid-proton/proton-c/bindings/go/src/qpid.apache.org/
-RUN git checkout 4edafb1a473e3a0d9aa3b9498a3f5bba257aba0a
 RUN cp -r /go/src/qpid-proton/proton-c/bindings/go/src/qpid.apache.org /go/src/
 
 # load the source code of the project into the image
@@ -55,6 +48,7 @@ ARG EH_TEST_NAMESPACE
 ARG EH_TEST_NAME
 ARG EH_TEST_SAS_POLICY_NAME
 ARG EH_TEST_SAS_POLICY_KEY
+# RUN env
 
 # run the tests
 WORKDIR /go/src/github.com/openenergi/go-event-hub
