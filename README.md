@@ -32,6 +32,7 @@ export EH_TEST_NAMESPACE=foo
 export EH_TEST_NAME=foo
 export EH_TEST_SAS_POLICY_NAME=foo
 export EH_TEST_SAS_POLICY_KEY=foo
+export EH_TEST_CONSUMER_GROUP="\$Default"
 ```
 
 ## Compile
@@ -43,14 +44,11 @@ To compile the Go apps:
 
 ## Run the sender
 
-To run the sender: `PN_TRACE_FRM=1 ./sender`
+Note: the sender does not need `EH_TEST_CONSUMER_GROUP` to be setup. To run the sender: `PN_TRACE_FRM=1 ./sender`
 
 ## Run the receiver
 
-To run the receiver:
-
-- make sure the Consumer Group is set as an environment variable e.g. for the default Consumer Group of your Event Hub: `export EH_TEST_CONSUMER_GROUP="\$Default"`
-- then you can run the receiver app: `PN_TRACE_FRM=1 ./receiver`
+To run the receiver: `PN_TRACE_FRM=1 ./receiver`
 
 For more details on the Proton environment variables check: https://qpid.apache.org/releases/qpid-proton-0.18.0/proton/c/api/group__transport.html
 
@@ -58,6 +56,10 @@ For more details on the Proton environment variables check: https://qpid.apache.
 
 - Make sure you set the Event Hub connection details as environment variables as previously explained.
 - Run all the tests: `go test -v ./msauth/... ./eventhub/...`.
+
+For a complete live end to end integration test involving a receiver configured with a partition offset as `@latest`,
+and a sender sending a message to the Event Hub, then listening to the receiver channel for the message previously sent
+take a look at `end_to_end_integration_test.go`.
 
 # Docker
 

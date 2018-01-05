@@ -13,6 +13,13 @@ import (
 	"time"
 )
 
+// LatestOffset could be used by the receiver as the value for each partition
+// in the input field ReceiverOpts.PartitionOffsets to be able to ignore
+// the past messages stored in the Event Hub and start receiving messages
+// published after the AMQP connection/link has been established.
+// For more details about the context around filters cf. http://azure.github.io/amqpnetlite/articles/azure_eventhubs.html#filter
+const LatestOffset = "@latest"
+
 // Receiver allows to consume messages from the Azure Event Hub
 type Receiver interface {
 	// Close allows to close the AMQP connection to the Event Hub
@@ -37,17 +44,18 @@ type receiver struct {
 
 // ReceiverOpts allows to configure the receiver when creating the instance
 type ReceiverOpts struct {
-	EventHubNamespace    string
-	EventHubName         string
-	SasPolicyName        string
-	SasPolicyKey         string
-	ConsumerGroupName    string
-	LinkCapacity         int
-	PartitionOffsets     []string
-	PartitionOffsetsPath string
-	OffsetsFlushInterval time.Duration
-	TokenExpiryInterval  time.Duration
-	Debug                bool
+	EventHubNamespace         string
+	EventHubName              string
+	SasPolicyName             string
+	SasPolicyKey              string
+	ConsumerGroupName         string
+	LinkCapacity              int
+	PartitionOffsets          []string
+	PartitionOffsetsPath      string
+	EpochTimeInMillisecFilter int64
+	OffsetsFlushInterval      time.Duration
+	TokenExpiryInterval       time.Duration
+	Debug                     bool
 }
 
 // Every time a new incoming message is processed
@@ -98,6 +106,8 @@ func NewReceiver(recOpts ReceiverOpts) (Receiver, error) {
 	cgOutChan := make(chan EhMessage)
 	// Channel where the AMQP messages from the Event Hub will be published
 	msgOutChan := make(chan EhMessage)
+
+	// TODO avoid creating the offset manager when a timestamp is provided instead (enqueued time filter)
 	// CSV file storage for the partition offsets
 	offsetManager, err := newOffsetManager(offsetsOpts{PartitionOffsets: recOpts.PartitionOffsets, PartitionOffsetsPath: recOpts.PartitionOffsetsPath})
 	if err != nil {
@@ -105,12 +115,13 @@ func NewReceiver(recOpts ReceiverOpts) (Receiver, error) {
 	}
 	// Consumer Group to receive messages from different partitions of the Event Hub
 	cg, err := newConsumerGroup(consumerGroupOpts{
-		eventHubName:      recOpts.EventHubName,
-		consumerGroupName: recOpts.ConsumerGroupName,
-		partitionOffsets:  offsetManager.Current(),
-		inMsgsChan:        cgOutChan,
-		amqpConnection:    amqpConnection,
-		linkCapacity:      recOpts.LinkCapacity,
+		eventHubName:        recOpts.EventHubName,
+		consumerGroupName:   recOpts.ConsumerGroupName,
+		partitionOffsets:    offsetManager.Current(),
+		epochTimeInMillisec: recOpts.EpochTimeInMillisecFilter,
+		inMsgsChan:          cgOutChan,
+		amqpConnection:      amqpConnection,
+		linkCapacity:        recOpts.LinkCapacity,
 	})
 	if err != nil {
 		return nil, err
@@ -252,21 +263,39 @@ type consumerGroup struct {
 }
 
 type consumerGroupOpts struct {
-	eventHubName      string
-	consumerGroupName string
-	partitionOffsets  []string
-	inMsgsChan        chan EhMessage
-	amqpConnection    electron.Connection
-	linkCapacity      int
+	eventHubName        string
+	consumerGroupName   string
+	partitionOffsets    []string
+	epochTimeInMillisec int64
+	inMsgsChan          chan EhMessage
+	amqpConnection      electron.Connection
+	linkCapacity        int
 }
+
+const (
+	fDescriptorAmqpSymbol      = amqp.Symbol("apache.org:selector-filter:string")
+	fOffsetValueTemplate       = "amqp.annotation.x-opt-offset > '%v'"
+	fEnqueuedTimeValueTemplate = "amqp.annotation.x-opt-enqueued-time > %v"
+)
 
 func amqpMsgFilter(cgOpts consumerGroupOpts, partitionID int) map[amqp.Symbol]interface{} {
 	filterMap := make(map[amqp.Symbol]interface{})
+	// enqueued time filter
+	if cgOpts.epochTimeInMillisec > 0 {
+		enqueuedTimeDesc := amqp.Described{
+			Descriptor: fDescriptorAmqpSymbol,
+			Value:      fmt.Sprintf(fEnqueuedTimeValueTemplate, cgOpts.epochTimeInMillisec),
+		}
+		filterMap[amqp.Symbol("string")] = enqueuedTimeDesc
+		Logger.Printf("The filter map (attached to partitionID %v) for the enqueued time is: %v\n", partitionID, filterMap)
+		return filterMap
+	}
+	// offset filter
 	partitionOffset := cgOpts.partitionOffsets[partitionID]
 	if partitionOffset != "" {
 		offsetDesc := amqp.Described{
-			Descriptor: amqp.Symbol("apache.org:selector-filter:string"),
-			Value:      fmt.Sprintf("amqp.annotation.x-opt-offset > '%v'", partitionOffset),
+			Descriptor: fDescriptorAmqpSymbol,
+			Value:      fmt.Sprintf(fOffsetValueTemplate, partitionOffset),
 		}
 		filterMap[amqp.Symbol("string")] = offsetDesc
 		Logger.Printf("The filter map for partitionID %d is: %v\n", partitionID, filterMap)

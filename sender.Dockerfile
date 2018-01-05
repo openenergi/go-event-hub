@@ -5,6 +5,7 @@ ENV EH_TEST_NAMESPACE=${EH_TEST_NAMESPACE}
 ENV EH_TEST_NAME=${EH_TEST_NAME}
 ENV EH_TEST_SAS_POLICY_NAME=${EH_TEST_SAS_POLICY_NAME}
 ENV EH_TEST_SAS_POLICY_KEY=${EH_TEST_SAS_POLICY_KEY}
+# no need for the EH_TEST_CONSUMER_GROUP environment variable here, as that's for a receiver
 
 # where the source code of the Go app (main func) is located
 WORKDIR /go/src/github.com/openenergi/go-event-hub/

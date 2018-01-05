@@ -4,4 +4,4 @@ services:
   - docker
 
 script:
-  - docker build -t oe-mseventhub --build-arg EH_TEST_NAMESPACE="$EH_TEST_NAMESPACE" --build-arg EH_TEST_NAME="$EH_TEST_NAME" --build-arg EH_TEST_SAS_POLICY_NAME="$EH_TEST_SAS_POLICY_NAME" --build-arg EH_TEST_SAS_POLICY_KEY="$EH_TEST_SAS_POLICY_KEY" -f oe-mseventhub.Dockerfile .
+  - docker build -t oe-mseventhub --build-arg EH_TEST_NAMESPACE="$EH_TEST_NAMESPACE" --build-arg EH_TEST_NAME="$EH_TEST_NAME" --build-arg EH_TEST_SAS_POLICY_NAME="$EH_TEST_SAS_POLICY_NAME" --build-arg EH_TEST_SAS_POLICY_KEY="$EH_TEST_SAS_POLICY_KEY" --build-arg EH_TEST_CONSUMER_GROUP="$EH_TEST_CONSUMER_GROUP" -f oe-mseventhub.Dockerfile .
