@@ -44,18 +44,18 @@ type receiver struct {
 
 // ReceiverOpts allows to configure the receiver when creating the instance
 type ReceiverOpts struct {
-	EventHubNamespace         string
-	EventHubName              string
-	SasPolicyName             string
-	SasPolicyKey              string
-	ConsumerGroupName         string
-	LinkCapacity              int
-	PartitionOffsets          []string
-	PartitionOffsetsPath      string
-	EpochTimeInMillisecFilter int64
-	OffsetsFlushInterval      time.Duration
-	TokenExpiryInterval       time.Duration
-	Debug                     bool
+	EventHubNamespace    string
+	EventHubName         string
+	SasPolicyName        string
+	SasPolicyKey         string
+	ConsumerGroupName    string
+	LinkCapacity         int
+	PartitionOffsets     []string
+	PartitionOffsetsPath string
+	TimeFilterUTC        *time.Time
+	OffsetsFlushInterval time.Duration
+	TokenExpiryInterval  time.Duration
+	Debug                bool
 }
 
 // Every time a new incoming message is processed
@@ -115,13 +115,13 @@ func NewReceiver(recOpts ReceiverOpts) (Receiver, error) {
 	}
 	// Consumer Group to receive messages from different partitions of the Event Hub
 	cg, err := newConsumerGroup(consumerGroupOpts{
-		eventHubName:        recOpts.EventHubName,
-		consumerGroupName:   recOpts.ConsumerGroupName,
-		partitionOffsets:    offsetManager.Current(),
-		epochTimeInMillisec: recOpts.EpochTimeInMillisecFilter,
-		inMsgsChan:          cgOutChan,
-		amqpConnection:      amqpConnection,
-		linkCapacity:        recOpts.LinkCapacity,
+		eventHubName:      recOpts.EventHubName,
+		consumerGroupName: recOpts.ConsumerGroupName,
+		partitionOffsets:  offsetManager.Current(),
+		timeFilterUTC:     recOpts.TimeFilterUTC,
+		inMsgsChan:        cgOutChan,
+		amqpConnection:    amqpConnection,
+		linkCapacity:      recOpts.LinkCapacity,
 	})
 	if err != nil {
 		return nil, err
@@ -203,12 +203,13 @@ var (
 	amqpEhOptEnqueuedTimeKey   = amqp.AnnotationKeyString("x-opt-enqueued-time")
 )
 
-// fixEnqueuedTimeEpoch helps in multiplying by 1000 the original timestamp,
+// extractAndFixEnqueuedTimeEpoch helps in multiplying by 1000 the original timestamp,
 // otherwise the enqueued time is around 1970 rather than the correct one (roughly time.Now())
-func fixEnqueuedTimeEpoch(wrongEnqueuedTime time.Time) time.Time {
-	newVal := time.Unix(wrongEnqueuedTime.Unix()*1000, 0)
-	// fmt.Printf("Existing time: %v new time: %v\n", wrongEnqueuedTime, newVal)
-	return newVal
+func extractAndFixEnqueuedTimeEpoch(amqpAnnotations map[amqp.AnnotationKey]interface{}) time.Time {
+	timeAsParsedByQpidProton := amqpAnnotations[amqpEhOptEnqueuedTimeKey].(time.Time)
+	fixedTimeType := time.Unix(timeAsParsedByQpidProton.Unix()*1000, 0)
+	// fmt.Printf("!> Parsing received message: \n\tfound time: %v (as epoch Unix secs %v) \n\tfixed time: %v (as epoch  Unix secs %v)\n", timeAsParsedByQpidProton, timeAsParsedByQpidProton.Unix(), fixedTimeType, fixedTimeType.Unix())
+	return fixedTimeType
 }
 
 // ToEhMessage transforms a RawMessage to a EhMessage
@@ -230,7 +231,7 @@ func (rawMsg RawMessage) ToEhMessage() EhMessage {
 	annotationsMap := rawMsg.AmqpMsg.MessageAnnotations()
 	output.SequenceNumber = annotationsMap[amqpEhOptSequenceNumberKey].(int64)
 	output.Offset = annotationsMap[amqpEhOptOffsetKey].(string)
-	output.EnqueuedTime = fixEnqueuedTimeEpoch(annotationsMap[amqpEhOptEnqueuedTimeKey].(time.Time))
+	output.EnqueuedTime = extractAndFixEnqueuedTimeEpoch(annotationsMap)
 	partitionKeyValue := annotationsMap[amqpEhOptPartitionKeyKey]
 	if partitionKeyValue != nil {
 		output.PartitionKey = partitionKeyValue.(string)
@@ -271,13 +272,13 @@ type consumerGroup struct {
 }
 
 type consumerGroupOpts struct {
-	eventHubName        string
-	consumerGroupName   string
-	partitionOffsets    []string
-	epochTimeInMillisec int64
-	inMsgsChan          chan EhMessage
-	amqpConnection      electron.Connection
-	linkCapacity        int
+	eventHubName      string
+	consumerGroupName string
+	partitionOffsets  []string
+	timeFilterUTC     *time.Time
+	inMsgsChan        chan EhMessage
+	amqpConnection    electron.Connection
+	linkCapacity      int
 }
 
 const (
@@ -286,13 +287,17 @@ const (
 	fEnqueuedTimeValueTemplate = "amqp.annotation.x-opt-enqueued-time > %v"
 )
 
+func epochFilterToMillis(timeFilterUTC time.Time) int64 {
+	return timeFilterUTC.UTC().UnixNano() / 1000000
+}
+
 func amqpMsgFilter(cgOpts consumerGroupOpts, partitionID int) map[amqp.Symbol]interface{} {
 	filterMap := make(map[amqp.Symbol]interface{})
 	// enqueued time filter
-	if cgOpts.epochTimeInMillisec > 0 {
+	if cgOpts.timeFilterUTC != nil {
 		enqueuedTimeDesc := amqp.Described{
 			Descriptor: fDescriptorAmqpSymbol,
-			Value:      fmt.Sprintf(fEnqueuedTimeValueTemplate, cgOpts.epochTimeInMillisec),
+			Value:      fmt.Sprintf(fEnqueuedTimeValueTemplate, epochFilterToMillis(*cgOpts.timeFilterUTC)),
 		}
 		filterMap[amqp.Symbol("string")] = enqueuedTimeDesc
 		Logger.Printf("The filter map (attached to partitionID %v) for the enqueued time is: %v\n", partitionID, filterMap)

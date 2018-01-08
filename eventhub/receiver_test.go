@@ -93,9 +93,9 @@ func TestAmqpFilterMapForOffsets(t *testing.T) {
 }
 
 func TestAmqpFilterMapForEnqueuedTime(t *testing.T) {
-	nowMillis := time.Now().UnixNano() / int64(time.Millisecond)
+	nowUTC := time.Now().UTC()
 	inOpts := consumerGroupOpts{
-		epochTimeInMillisec: nowMillis,
+		timeFilterUTC: &nowUTC,
 	}
 	partitionID := 1
 
@@ -109,7 +109,8 @@ func TestAmqpFilterMapForEnqueuedTime(t *testing.T) {
 		t.Errorf("The descriptor of the filter map does not have the expected format: %s, found instead: %s", fDescriptorAmqpSymbol, filterDescription.Descriptor)
 	}
 
-	// check the filter-map value is the one based on a timestamp in milliseconds
+	// check the filter-map value is the one based on a timestamp in seconds
+	nowMillis := nowUTC.UnixNano() / 1000000
 	expectedFDescriptor := fmt.Sprintf(fEnqueuedTimeValueTemplate, nowMillis)
 	if filterDescription.Value != expectedFDescriptor {
 		t.Errorf("The milliseconds value of the filter map does not have the expected format: %s, found instead: %s", expectedFDescriptor, filterDescription.Value)
