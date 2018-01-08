@@ -20,7 +20,7 @@ To install the Go wrapper (Electron) on a Linux Debian machine you can follow th
 
 # Sample sender / receiver
 
-There are a pair of Go files containing a `main` function to demonstrate the usage of the library.
+There is a couple of Go files containing a `main` function to demonstrate the usage of the library.
 They could be use to send and receive messages via the Event Hub.
 
 ## Connection details
@@ -59,7 +59,7 @@ For more details on the Proton environment variables check: https://qpid.apache.
 
 For a complete live end to end integration test involving a receiver configured with a partition offset as `@latest`,
 and a sender sending a message to the Event Hub, then listening to the receiver channel for the message previously sent
-take a look at `end_to_end_integration_test.go`.
+take a look at `end_to_end_integration_test.go`. That also contain an end to end test scenario for a filter based on timestamps.
 
 # Docker
 
@@ -78,7 +78,7 @@ take a look at `end_to_end_integration_test.go`.
 
 # Networking
 
-To troubleshoot networking issues with Wireshark due to sockets, TSL connection, SSL keys, etc. you could use a filter like this: `ip.addr == 192.168.XXX.YYY && (tcp.srcport == 5671 || tcp.dstport == 5671)` where `5671` is the standard AMQP 1.0 TCP port to connect to the Azure Event Hub.
+To troubleshoot networking issues with Wireshark due to sockets, TLS connection, SSL keys, etc. you could use a filter like this: `ip.addr == 192.168.XXX.YYY && (tcp.srcport == 5671 || tcp.dstport == 5671)` where `5671` is the standard AMQP 1.0 TCP port to connect to the Azure Event Hub.
 
 Make sure the `Debug` option of the Go instance representing an AMQP connection (`eventhub.SenderOpts` and `eventhub.ReceiverOpts`) is set to `true` so the SSL key is stored to a file to be later used by Wireshark to decrypt the network traffic capture.
 Check `common.go` for more details on this.

@@ -15,13 +15,8 @@ const (
 )
 
 // offsetManager is the struct containing the logic to get/set
-// the parition values of the in-memory slice.
+// the partition values of the in-memory slice.
 // It could be potentially exported as the following interface.
-//
-// type OffsetManager interface {
-// 	Current() []string
-// 	UpdateOffset(newValue string, partitionID int)
-// }
 type offsetManager struct {
 	// in-memory offsets slice
 	mu             sync.Mutex
