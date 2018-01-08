@@ -83,4 +83,6 @@ func TestEndToEndAmqpMessageFlowUsingLatestKeywordForPartitionOffsetsAsFilter(t 
 	if currEhMsg.Body != thisMessage {
 		t.Errorf("Expected to receive this message: '%s' but received this message instead: '%s'", thisMessage, currEhMsg)
 	}
+
+	fmt.Printf("Received this message: '%v' with enqueued time as epoch: %d\n", currEhMsg, currEhMsg.EnqueuedTime.Unix())
 }

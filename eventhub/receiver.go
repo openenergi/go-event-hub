@@ -203,6 +203,14 @@ var (
 	amqpEhOptEnqueuedTimeKey   = amqp.AnnotationKeyString("x-opt-enqueued-time")
 )
 
+// fixEnqueuedTimeEpoch helps in multiplying by 1000 the original timestamp,
+// otherwise the enqueued time is around 1970 rather than the correct one (roughly time.Now())
+func fixEnqueuedTimeEpoch(wrongEnqueuedTime time.Time) time.Time {
+	newVal := time.Unix(wrongEnqueuedTime.Unix()*1000, 0)
+	// fmt.Printf("Existing time: %v new time: %v\n", wrongEnqueuedTime, newVal)
+	return newVal
+}
+
 // ToEhMessage transforms a RawMessage to a EhMessage
 func (rawMsg RawMessage) ToEhMessage() EhMessage {
 	output := EhMessage{}
@@ -222,7 +230,7 @@ func (rawMsg RawMessage) ToEhMessage() EhMessage {
 	annotationsMap := rawMsg.AmqpMsg.MessageAnnotations()
 	output.SequenceNumber = annotationsMap[amqpEhOptSequenceNumberKey].(int64)
 	output.Offset = annotationsMap[amqpEhOptOffsetKey].(string)
-	output.EnqueuedTime = annotationsMap[amqpEhOptEnqueuedTimeKey].(time.Time)
+	output.EnqueuedTime = fixEnqueuedTimeEpoch(annotationsMap[amqpEhOptEnqueuedTimeKey].(time.Time))
 	partitionKeyValue := annotationsMap[amqpEhOptPartitionKeyKey]
 	if partitionKeyValue != nil {
 		output.PartitionKey = partitionKeyValue.(string)
