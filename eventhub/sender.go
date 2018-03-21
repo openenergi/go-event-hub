@@ -14,11 +14,11 @@ type Sender interface {
 	// Close can be used to close the AMQP 1.0 connection to the Event Hub
 	Close()
 	// Send synchronously sends a message returning either an error or the ACK value
-	Send(message string) (int32, error)
+	Send(message string, appProperties map[string]interface{}) (int32, error)
 	// SendAsync returns straight away
-	SendAsync(message string) int32
+	SendAsync(message string, appProperties map[string]interface{}) int32
 	// SendAsyncTimeout is asynchronous but it uses a timeout
-	SendAsyncTimeout(message string, timeout time.Duration) int32
+	SendAsyncTimeout(message string, appProperties map[string]interface{}, timeout time.Duration) int32
 	// ErrorChan is a channel allowing to to consume all the errors coming from the AMQP connection
 	ErrorChan() chan error
 }
@@ -153,8 +153,9 @@ func (s *sender) prepareAmqpMsg(message string) (amqp.Message, int32) {
 
 // Send allows the user to send a message in a synchronous way.
 // It returns the number of sent messages so far along with an error instance.
-func (s *sender) Send(message string) (int32, error) {
+func (s *sender) Send(message string, appProperties map[string]interface{}) (int32, error) {
 	msg, curValue := s.prepareAmqpMsg(message)
+	msg.SetApplicationProperties(appProperties)
 	outcome := s.msgLink.SendSync(msg)
 	return curValue, validateOutcome(outcome)
 }
@@ -166,8 +167,9 @@ type valueWrap struct {
 // SendAsync is a wrapper for the Electron library
 // taking care of the new message structure.
 // For more details cf.: https://godoc.org/qpid.apache.org/electron#Sender
-func (s *sender) SendAsync(message string) int32 {
+func (s *sender) SendAsync(message string, appProperties map[string]interface{}) int32 {
 	msg, curValue := s.prepareAmqpMsg(message)
+	msg.SetApplicationProperties(appProperties)
 	s.msgLink.SendAsync(msg, s.outcomeChan, valueWrap{curValue})
 	return curValue
 }
@@ -175,8 +177,9 @@ func (s *sender) SendAsync(message string) int32 {
 // SendAsyncTimeout is a wrapper for the Electron library
 // taking care of the new message structure.
 // For more details cf.: https://godoc.org/qpid.apache.org/electron#Sender
-func (s *sender) SendAsyncTimeout(message string, timeout time.Duration) int32 {
+func (s *sender) SendAsyncTimeout(message string, appProperties map[string]interface{}, timeout time.Duration) int32 {
 	msg, curValue := s.prepareAmqpMsg(message)
+	msg.SetApplicationProperties(appProperties)
 	s.msgLink.SendAsyncTimeout(msg, s.outcomeChan, valueWrap{curValue}, timeout)
 	return curValue
 }
