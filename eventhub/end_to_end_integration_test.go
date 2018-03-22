@@ -70,7 +70,7 @@ func TestEndToEndAmqpMessageFlowUsingLatestKeywordForPartitionOffsetsAsFilter(t 
 	thisMessage := fmt.Sprintf("End to end test on the '@latest' partition offset, created at: %s", time.Now())
 
 	// send a message (ignore the returned unique ID)
-	_, err = ehSender.Send(thisMessage)
+	_, err = ehSender.Send(thisMessage, map[string]interface{}{})
 	if err != nil {
 		t.Errorf("There has been an error sending '%v', the error message is: %v\n", thisMessage, err)
 	}
@@ -149,7 +149,7 @@ func TestEndToEndAmqpMessageFlowUsingTimestampsAsFilters(t *testing.T) {
 	thisMessage := fmt.Sprintf("End to end test on the timestamp filter, created at: %s", time.Now())
 
 	// send the message
-	_, err = ehSender.Send(thisMessage)
+	_, err = ehSender.Send(thisMessage, map[string]interface{}{})
 	if err != nil {
 		t.Errorf("There has been an error sending '%v', the error message is: %v\n", thisMessage, err)
 	}

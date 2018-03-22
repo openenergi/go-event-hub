@@ -50,7 +50,7 @@ func main() {
 
 	// 1) send sync
 	// ------------
-	uniqueID, err := ehSender.Send(thisMessage)
+	uniqueID, err := ehSender.Send(thisMessage, map[string]interface{}{})
 	if err != nil {
 		appLogger.Printf("!!! error sending '%v', the error message is: %v\n", thisMessage, err)
 	}
@@ -61,12 +61,12 @@ func main() {
 
 	// 2) send async (wait forever for ACK)
 	// ------------------------------------
-	uniqueID = ehSender.SendAsync(thisMessage)
+	uniqueID = ehSender.SendAsync(thisMessage, map[string]interface{}{})
 	appLogger.Printf("The message was identified by SendAsync with this ID: %d\n", uniqueID)
 
 	// 3) send async with timeout
 	// --------------------------
-	uniqueID = ehSender.SendAsyncTimeout(thisMessage, 2*time.Second)
+	uniqueID = ehSender.SendAsyncTimeout(thisMessage, map[string]interface{}{}, 2*time.Second)
 	appLogger.Printf("The message was identified by SendAsyncTimeout with this ID: %d\n", uniqueID)
 
 	select {}
