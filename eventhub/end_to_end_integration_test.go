@@ -68,9 +68,12 @@ func TestEndToEndAmqpMessageFlowUsingLatestKeywordForPartitionOffsetsAsFilter(t 
 
 	// prepare the message
 	thisMessage := fmt.Sprintf("End to end test on the '@latest' partition offset, created at: %s", time.Now())
+	thisMessageAppProps := map[string]interface{}{
+		"FooKey": "FooValue",
+	}
 
 	// send a message (ignore the returned unique ID)
-	_, err = ehSender.Send(thisMessage, map[string]interface{}{})
+	_, err = ehSender.Send(thisMessage, thisMessageAppProps)
 	if err != nil {
 		t.Errorf("There has been an error sending '%v', the error message is: %v\n", thisMessage, err)
 	}
@@ -83,6 +86,10 @@ func TestEndToEndAmqpMessageFlowUsingLatestKeywordForPartitionOffsetsAsFilter(t 
 	// assert on the received message
 	if currEhMsg.Body != thisMessage {
 		t.Errorf("Expected to receive this message: '%s' but received this message instead: '%s'", thisMessage, currEhMsg)
+	}
+
+	if currEhMsg.ApplicationProperties["FooKey"] != "FooValue" {
+		t.Errorf("The application properties are not the expected ones: %#v", currEhMsg.ApplicationProperties)
 	}
 }
 

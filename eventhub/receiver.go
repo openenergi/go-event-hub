@@ -5,12 +5,13 @@ import (
 	"errors"
 	"fmt"
 	"os"
-	"qpid.apache.org/amqp"
-	"qpid.apache.org/electron"
 	"reflect"
 	"strconv"
 	"strings"
 	"time"
+
+	"qpid.apache.org/amqp"
+	"qpid.apache.org/electron"
 )
 
 // LatestOffset could be used by the receiver as the value for each partition
@@ -186,14 +187,18 @@ type RawMessage struct {
 // the body of the message, but there are other interesting fields
 // regarding the Partition offset, when the message was enqueued,
 // along with other details about the Event Hub partitions.
+//
+// The Application Properties provided by the sender are also exposed.
+// This is to allow the user to parse any potential custom property.
 type EhMessage struct {
-	Body           string    `json:"body"`
-	SequenceNumber int64     `json:"sequence_number"`
-	PartitionKey   string    `json:"partiton_key"`
-	Offset         string    `json:"offset"`
-	EnqueuedTime   time.Time `json:"enqueued_time"`
-	EhEndpoint     string    `json:"eh_endpoint"`
-	PartitionID    int       `json:"partition_id"`
+	Body                  string                 `json:"body"`
+	SequenceNumber        int64                  `json:"sequence_number"`
+	PartitionKey          string                 `json:"partiton_key"`
+	Offset                string                 `json:"offset"`
+	EnqueuedTime          time.Time              `json:"enqueued_time"`
+	EhEndpoint            string                 `json:"eh_endpoint"`
+	PartitionID           int                    `json:"partition_id"`
+	ApplicationProperties map[string]interface{} `json:"application_properties"`
 }
 
 var (
@@ -236,6 +241,8 @@ func (rawMsg RawMessage) ToEhMessage() EhMessage {
 	if partitionKeyValue != nil {
 		output.PartitionKey = partitionKeyValue.(string)
 	}
+
+	output.ApplicationProperties = rawMsg.AmqpMsg.ApplicationProperties()
 
 	return output
 }
